@@ -9,7 +9,7 @@ char incoming[MAX_DATA_LENGTH];
 
 Morser testSender;
 uint8_t* testSenderAllAttrPtr;
-
+const uint8_t* messPtr = nullptr;
 
 int main()
 {
@@ -25,11 +25,13 @@ int main()
     int tSpeed = 0;
     string allAttributes;
 
+/*
     Morser mSpeed;
     Morser mMessage;
     Morser mOnVel;
     Morser mOffVel;
     Morser mAllAttrPtr;
+    */
 
 
     //char dummy[] = { 1,0,0,1,0,0,1,1,1,0,0,1,1 };
@@ -39,16 +41,17 @@ int main()
     {
         system("CLS");
         cout << "  JUNO Communication 0.3 - COM8\n";
-        cout << "  ====================================\n";
-        cout << "  1.  Select speed                 " << speed << endl;
-        cout << "  2.  Select message               " << message << endl;
-        cout << "  3.  Select intensity             " << lowIntensity << "  " << highIntensity << endl;
+        cout << "                                   _________________\n";
+        cout << "  --------------------------------| Current Values: |\n";
+        cout << "  1.  Select speed                |" << speed << "         |" << endl;
+        cout << "  2.  Select message              |" << message << "       |" << endl;
+        cout << "  3.  Select intensity            |" << lowIntensity << "  " << highIntensity << endl;
         cout << "  4.  Show current attributes\n";
         cout << "  5.  Update attributes\n";
         cout << "\n";
         cout << "  6.  Exit\n";
         cout << "  7.  Test area\n";
-        cout << "  ====================================\n";
+        cout << "  ------------------------------------\n";
         cout << "  Enter your selection: ";
         cin >> selection;
         cout << endl;
@@ -61,7 +64,8 @@ int main()
             cout << "Range from 1-31, 8 is once per second\n";
 
             cin >> speed; 
-            mSpeed.setSpeed(speed); //virker det her?
+            testSender.setSpeed(speed);
+            //mSpeed.setSpeed(speed); //virker det her?
 
             cout << "\n";
             break;
@@ -71,7 +75,8 @@ int main()
             cout << "Select message:\n";
 
             getline(cin >> ws, message); //remove whitespace for blank spaces in message
-            mMessage.setMessage(message);
+            testSender.setMessage(message);
+            //mMessage.setMessage(message);
 
             cout << "\n";
             break;
@@ -82,7 +87,8 @@ int main()
             cout << "Range from 1-31\n";
                 
             cin >> lowIntensity;
-            mOffVel.setOffIntensity(lowIntensity);
+            testSender.setOffIntensity(lowIntensity);
+            //mOffVel.setOffIntensity(lowIntensity);
             //setOffIntensity(lowIntensity);
             
             cout << "\n";
@@ -91,7 +97,8 @@ int main()
             cout << "Range from 1-31\n";
             
             cin >> highIntensity;
-            mOnVel.setOnIntensity(highIntensity);
+            testSender.setOnIntensity(highIntensity);
+            //mOnVel.setOnIntensity(highIntensity);
             //setOnIntensity(highIntensity);
             
             cout << "\n";
@@ -101,8 +108,10 @@ int main()
                     cout << "Intensity values are not corret, try again\n";
                     cout << "Select low intensity:\n";
                     cin >> lowIntensity;
+                    testSender.setOffIntensity(lowIntensity);
                     cout << "\n";
                     cout << "Select high intensity:\n";
+                    testSender.setOnIntensity(highIntensity);
                     cin >> highIntensity;
                     cout << "\n";
                 }
@@ -163,6 +172,25 @@ int main()
             cout << "Test area\n";
             //tSpeed = mSpeed.getSpeed;
 
+            //toArd("00000000");
+
+            testSender.getMessageInMorse(messPtr);
+            testSender.getAllAttrPtr(testSenderAllAttrPtr);
+
+            cout << endl << endl << "All data sent (as wrong int):  " << (int*)testSenderAllAttrPtr << endl;
+
+            cout << endl << endl << "Arduino will receive: " << endl;
+            for (unsigned int i = 0; testSenderAllAttrPtr[i] != 0; i++)
+            {
+                cout << "  0b"; //til at skrive det pÃ¦nt op, 0b kommer ikke videre til Arduino
+                for (uint8_t j = 0; j < 8; j++) {
+                    cout << (((char)testSenderAllAttrPtr[i] & (0b10000000 >> j)) ? '1' : '0');
+                }
+            }
+            cout << "  0b00000000";
+
+            Sleep(5000);
+
 
         default: cout << selection << " is not a valid menu item.\n";
 
@@ -192,16 +220,25 @@ int toArd(string command) {
         copy(command.begin(), command.end(), charArray);
         charArray[command.size()] = '\n';
 
+        testSender.getMessageInMorse(messPtr);
         testSender.getAllAttrPtr(testSenderAllAttrPtr);
 
-        cout << "Arduino will receive:\n" << (int*)testSenderAllAttrPtr << endl;
+        //cout << "Arduino will receive:\n" << (int*)testSenderAllAttrPtr << endl;
 
-        arduino.writeSerialPort((char*)testSenderAllAttrPtr, MAX_DATA_LENGTH);
+        
+        for (unsigned int i = 0; testSenderAllAttrPtr[i] != 0; i++)
+        {
+            cout << "sent byte " << endl;
+            arduino.writeSerialPort((char*)testSenderAllAttrPtr[i], MAX_DATA_LENGTH);
+        }
+
+        //arduino.writeSerialPort(charArray, MAX_DATA_LENGTH); //original kode foruden for-loopet
+
         arduino.readSerialPort(output, MAX_DATA_LENGTH);
 
-        cout << "\nAttributes updated to Arduino!" << endl;
+        cout << "Arduino Output: " << output << endl; //output fra Arduino bliver cout'et her, mÃ¥ske ikke nÃ¸dvendigt
 
-        cout << "Arduino Output: " << output << endl; //output fra Arduino bliver cout'et her, måske ikke nødvendigt
+        cout << "\nAttributes updated to Arduino!" << endl;
 
         delete[] charArray;
 
@@ -235,7 +272,7 @@ int attrToArd(uint8_t intCommand) {
 
     cout << "\nAttributes updated to Arduino!" << endl;
 
-    cout << "Arduino Output: " << output << endl; //output fra Arduino bliver cout'et her, måske ikke nødvendigt
+    cout << "Arduino Output: " << output << endl; //output fra Arduino bliver cout'et her, mÃ¥ske ikke nÃ¸dvendigt
 
     delete[] charArray;
 
