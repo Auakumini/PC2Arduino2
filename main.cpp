@@ -1,6 +1,4 @@
 #include "main.h"
-
-
 using namespace std;
 
 char output[MAX_DATA_LENGTH]; //MAX_DATA_LENGTH fra .h-filen
@@ -18,35 +16,36 @@ int main()
     int i = 0;
 
     char selection = 0;
+    char comSelect = 8;
     int speed = 8; //8 er 1 i sekundet
     string message = "besked her";
     int lowIntensity = 4;
     int highIntensity = 24;
-    int tSpeed = 0;
     string allAttributes;
 
-/*
-    Morser mSpeed;
-    Morser mMessage;
-    Morser mOnVel;
-    Morser mOffVel;
-    Morser mAllAttrPtr;
-    */
+    int tSpeed = 0; //test speed
 
+    testSender.setSpeed(speed); //her bliver standard værdier sat til Morser objekt
+    testSender.setMessage(message);
+    testSender.setOffIntensity(lowIntensity);
+    testSender.setOnIntensity(highIntensity);
 
-    //char dummy[] = { 1,0,0,1,0,0,1,1,1,0,0,1,1 };
-    //int i = 0; //sizeof(dummy) / sizeof(dummy[0])
+    tSpeed = testSender.getSpeed(); //til at teste preset speed fx.
+
+    cout << "choose COM-port: ";
+    cin >> comSelect;
+    port[7] = comSelect;
 
     do
     {
         system("CLS");
-        cout << "  JUNO Communication 0.3 - COM8\n";
+        cout << "  JUNO Communication 0.3 - COM-port: " << comSelect << endl;
         cout << "                                   _________________\n";
-        cout << "  --------------------------------| Current Values: |\n";
-        cout << "  1.  Select speed                |" << speed << "         |" << endl;
-        cout << "  2.  Select message              |" << message << "       |" << endl;
+        cout << "  --------------------------------| Current Values: \n";
+        cout << "  1.  Select speed                |" << speed << endl;
+        cout << "  2.  Select message              |" << message << endl;
         cout << "  3.  Select intensity            |" << lowIntensity << "  " << highIntensity << endl;
-        cout << "  4.  Show current attributes\n";
+        cout << "  4.  Change COM-Port\n";
         cout << "  5.  Update attributes\n";
         cout << "\n";
         cout << "  6.  Exit\n";
@@ -119,14 +118,11 @@ int main()
         
         case '4':
             system("CLS");
-            cout << "Speed:  " << speed << endl << "Message:  " << message << endl << "Low Intensity:  " 
-                << lowIntensity << endl << "High Intensity:  " << highIntensity << endl << endl;
-            /*
-                        cout << "Speed:  " << getSpeed << endl << "Message:  " << getMessage << endl << "Low Intensity:  " 
-                << getLowIntensity << endl << "High Intensity:  " << getHighIntensity << endl << endl;
-            */
-            cout << "Returning in 5 seconds..." << endl;
-            Sleep(5000);
+
+            cout << "choose COM-port: ";
+            cin >> comSelect;
+            port[7] = comSelect;
+
             break;
 
         case '5':
@@ -136,29 +132,7 @@ int main()
 
             cout << "Connecting to Arduino...\n" << endl;
 
-            //cout << "Arduino will receive:\n" << allAttributes << endl;
-
             toArd(allAttributes);
-
-
-/*
-            do {
-                attrToArd(testSenderAllAttrPtr[i]);
-                i++;
-            } while (testSenderAllAttrPtr[i] != NULL);
-            */
-
-
-            //toArd(allAttributes); //testSenderAllAttrPtr
-
-            //toArd("OFF"); //TIL AT TESTE toArd FUNKTION MED CUSTOM BESKED!
-
-            //allAttrPtr = getAllAttrPtr();
-            //toArd(allAttrPtr);
-            // ELLER:
-            //toArd(*getallattr());
-
-            //toArd(mAllAttrPtr.getAllAttrPtr);
 
             break;
 
@@ -170,12 +144,13 @@ int main()
 
         case '7':
             cout << "Test area\n";
-            //tSpeed = mSpeed.getSpeed;
 
             //toArd("00000000");
 
             testSender.getMessageInMorse(messPtr);
             testSender.getAllAttrPtr(testSenderAllAttrPtr);
+
+            cout << "speed pre set: " << tSpeed << endl;
 
             cout << endl << endl << "All data sent (as wrong int):  " << (int*)testSenderAllAttrPtr << endl;
 
@@ -184,7 +159,7 @@ int main()
             {
                 cout << "  0b"; //til at skrive det pænt op, 0b kommer ikke videre til Arduino
                 for (uint8_t j = 0; j < 8; j++) {
-                    cout << (((char)testSenderAllAttrPtr[i] & (0b10000000 >> j)) ? '1' : '0');
+                    cout << ((testSenderAllAttrPtr[i] & (0b10000000 >> j)) ? '1' : '0');
                 }
             }
             cout << "  0b00000000";
@@ -209,16 +184,18 @@ int toArd(string command) {
         cout << "Connection established to Arduino\n" << endl;
     }
     else {
-        cout << "Error in port name";
+        cout << "Error in port name\n" << endl;
     }
     //while (arduino.isConnected()) {
         //string command;
         //cout << "Besked til Arduino:\n";
         //cin >> command;
         //}
+    /*
         char* charArray = new char[command.size() + 1];
         copy(command.begin(), command.end(), charArray);
         charArray[command.size()] = '\n';
+        */
 
         testSender.getMessageInMorse(messPtr);
         testSender.getAllAttrPtr(testSenderAllAttrPtr);
@@ -228,7 +205,7 @@ int toArd(string command) {
         
         for (unsigned int i = 0; testSenderAllAttrPtr[i] != 0; i++)
         {
-            cout << "sent byte " << endl;
+            cout << "sent byte nr. " << i << ": " << (char)testSenderAllAttrPtr[i] << " (as int: " << (int)testSenderAllAttrPtr[i] << ")" << endl;
             arduino.writeSerialPort((char*)testSenderAllAttrPtr[i], MAX_DATA_LENGTH);
         }
 
@@ -240,44 +217,9 @@ int toArd(string command) {
 
         cout << "\nAttributes updated to Arduino!" << endl;
 
-        delete[] charArray;
+        //delete[] charArray;
 
-        Sleep(5000);
-
-    return 0;
-}
-/*
-int attrToArd(uint8_t intCommand) {
-
-    string command = to_string(intCommand);
-
-    SerialPort arduino(port);
-    if (arduino.isConnected()) {
-        cout << "Connection established to Arduino\n" << endl;
-    }
-    else {
-        cout << "Error in port name";
-    }
-    //while (arduino.isConnected()) {
-        //string command;
-        //cout << "Besked til Arduino:\n";
-        //cin >> command;
-        //}
-    char* charArray = new char[command.size() + 1];
-    copy(command.begin(), command.end(), charArray);
-    charArray[command.size()] = '\n';
-
-    arduino.writeSerialPort(charArray, MAX_DATA_LENGTH);
-    arduino.readSerialPort(output, MAX_DATA_LENGTH);
-
-    cout << "\nAttributes updated to Arduino!" << endl;
-
-    cout << "Arduino Output: " << output << endl; //output fra Arduino bliver cout'et her, måske ikke nødvendigt
-
-    delete[] charArray;
-
-    Sleep(3000);
+        Sleep(5000);    
 
     return 0;
 }
-*/
