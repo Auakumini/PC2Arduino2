@@ -39,7 +39,7 @@ int main()
     do
     {
         system("CLS");
-        cout << "  JUNO Communication 0.3 - COM-port: " << comSelect << endl;
+        cout << "  JUNO Communication 0.4 - COM-port: " << comSelect << endl;
         cout << "                                   _________________\n";
         cout << "  --------------------------------| Current Values: \n";
         cout << "  1.  Select speed                |" << speed << endl;
@@ -137,6 +137,8 @@ int main()
             break;
 
         case '6':
+
+            
             cout << "Goodbye.\n";
             Sleep(2000);
             exit(1);
@@ -145,12 +147,7 @@ int main()
         case '7':
             cout << "Test area\n";
 
-            //toArd("00000000");
-
-            testSender.getMessageInMorse(messPtr);
             testSender.getAllAttrPtr(testSenderAllAttrPtr);
-
-            cout << "speed pre set: " << tSpeed << endl;
 
             cout << endl << endl << "All data sent (as wrong int):  " << (int*)testSenderAllAttrPtr << endl;
 
@@ -197,7 +194,7 @@ int toArd(string command) {
         charArray[command.size()] = '\n';
         */
 
-        testSender.getMessageInMorse(messPtr);
+ //       testSender.getMessageInMorse(messPtr);
         testSender.getAllAttrPtr(testSenderAllAttrPtr);
 
         //cout << "Arduino will receive:\n" << (int*)testSenderAllAttrPtr << endl;
@@ -213,7 +210,7 @@ int toArd(string command) {
 
         arduino.readSerialPort(output, MAX_DATA_LENGTH);
 
-        cout << "Arduino Output: " << output << endl; //output fra Arduino bliver cout'et her, måske ikke nødvendigt
+        cout << "\nArduino Output (if any): " << output << endl; //output fra Arduino bliver cout'et her, måske ikke nødvendigt
 
         cout << "\nAttributes updated to Arduino!" << endl;
 
