@@ -22,6 +22,7 @@ int main()
     int lowIntensity = 4;
     int highIntensity = 24;
     string allAttributes;
+    string tCommand;
 
     int tSpeed = 0; //test speed
 
@@ -50,6 +51,7 @@ int main()
         cout << "\n";
         cout << "  6.  Exit\n";
         cout << "  7.  Test area\n";
+        cout << "  8.  Int to ard test\n";
         cout << "  ------------------------------------\n";
         cout << "  Enter your selection: ";
         cin >> selection;
@@ -163,13 +165,24 @@ int main()
 
             Sleep(5000);
 
+        case '8':
+
+            //testSender.getAllAttrPtr(testSenderAllAttrPtr);
+           
+            cout << "Test send to Arduino: ";
+            cin >> tCommand;
+
+            intToArd(tCommand);
+
+            break;
+
 
         default: cout << selection << " is not a valid menu item.\n";
 
             cout << endl;
         }
 
-    } while (selection != 7);
+    } while (selection != 8);
 
     return 0;
 }
@@ -177,6 +190,8 @@ int main()
 int toArd(string command) {
 
     SerialPort arduino(port);
+//    arduino.writeSerialPort(to_send)
+
     if (arduino.isConnected()) {
         cout << "Connection established to Arduino\n" << endl;
     }
@@ -194,16 +209,13 @@ int toArd(string command) {
         charArray[command.size()] = '\n';
         */
 
- //       testSender.getMessageInMorse(messPtr);
         testSender.getAllAttrPtr(testSenderAllAttrPtr);
-
-        //cout << "Arduino will receive:\n" << (int*)testSenderAllAttrPtr << endl;
-
         
         for (unsigned int i = 0; testSenderAllAttrPtr[i] != 0; i++)
         {
             cout << "sent byte nr. " << i << ": " << (char)testSenderAllAttrPtr[i] << " (as int: " << (int)testSenderAllAttrPtr[i] << ")" << endl;
             arduino.writeSerialPort((char*)testSenderAllAttrPtr[i], MAX_DATA_LENGTH);
+            //arduino.writeSerialPort(testSenderAllAttrPtr, MAX_DATA_LENGTH);
         }
 
         //arduino.writeSerialPort(charArray, MAX_DATA_LENGTH); //original kode foruden for-loopet
@@ -217,6 +229,41 @@ int toArd(string command) {
         //delete[] charArray;
 
         Sleep(5000);    
+
+    return 0;
+}
+
+int intToArd(string command)
+{
+    SerialPort arduino(port);
+    if (arduino.isConnected()) {
+        cout << "Connection established to Arduino\n" << endl;
+    }
+    else {
+        cout << "Error in port name\n" << endl;
+    }
+
+    /*
+    while (arduino.isConnected())
+    {
+        cout << "Test send to Arduino: ";
+        cin >> command;
+    }
+    */
+
+    char* charArray = new char[command.size() + 1];
+    copy(command.begin(), command.end(), charArray);
+    charArray[command.size()] = '\n';
+
+    arduino.writeSerialPort(charArray, MAX_DATA_LENGTH); //original kode foruden for-loopet
+    arduino.readSerialPort(output, MAX_DATA_LENGTH);
+
+    cout << "sent command: " << command << endl;
+    cout << "arduino output: " << output << endl;
+
+    delete[] charArray;
+
+    Sleep(5000);
 
     return 0;
 }
